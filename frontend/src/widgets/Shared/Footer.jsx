@@ -1,6 +1,6 @@
 const Footer = () => {
   return (
-    <footer className="bg-gray-800 text-white p-4 text-center">
+    <footer className="bg-[#d7c378] text-black/80 p-4 text-center text-[12px]">
       <p>&copy; 2024 Olympics Events Management. All Rights Reserved.</p>
     </footer>
   );

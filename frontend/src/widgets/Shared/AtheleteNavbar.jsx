@@ -22,8 +22,11 @@ const AtheleteNavbar = () => {
   };
   return (
     <div className="flex items-center justify-between font-medium bg-slate-900 shadow-md px-3 py-5">
-      <NavLink to="/athelete-dashboard">
-        <h2 className="text-2xl font-semibold text-white">Athelete</h2>
+      <NavLink to="/events">
+        <div>
+          <img src={assets.logo1} className="w-14" />
+          <img src={assets.logo2} className="w-14" />
+        </div>
       </NavLink>
       <ul className="hidden sm:flex gap-5 text-sm text-gray-700">
         <NavLink to="/events" className="flex flex-col items-center gap-1">
@@ -34,6 +37,10 @@ const AtheleteNavbar = () => {
           <p>Participation History</p>
           <hr className="w-2/4 border-none h-[1.5px] bg-gray-700 hidden" />
         </NavLink>
+        <NavLink to="/profile" className="flex flex-col items-center gap-1">
+          <p>Athelete Profile</p>
+          <hr className="w-2/4 border-none h-[1.5px] bg-gray-700 hidden" />
+        </NavLink>
       </ul>
       <div className="flex item-center gap-6">
         <div className="group relative">
@@ -42,13 +49,13 @@ const AtheleteNavbar = () => {
           {/* Dropdown Menu */}
           {token && (
             <div className="group-hover:block hidden absolute dropdown-menu right-0 pt-4">
-              <div className="flex flex-col gap-2 w-36 py-3 px-5 bg-slate-100 text-gray-500 rounded">
-                <p
+              <div className="flex flex-col gap-2 w-36 py-3 px-5 bg-[#d7c378] text-gray-500 rounded">
+                {/* <p
                   onClick={() => navigate("/profile")}
                   className="cursor-pointer hover:text-black"
                 >
                   My Profile
-                </p>
+                </p> */}
 
                 <p onClick={logout} className="cursor-pointer hover:text-black">
                   Logout

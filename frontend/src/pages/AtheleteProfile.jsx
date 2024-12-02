@@ -2,7 +2,19 @@ import { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { StoreContext } from "../context/StoreContext";
 import { format, parse } from "date-fns";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+
 import { toast } from "react-toastify";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 const AtheleteProfile = () => {
   const { backendUrl, token } = useContext(StoreContext);
@@ -89,124 +101,86 @@ const AtheleteProfile = () => {
   if (error) return <div>{error}</div>;
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <div className="bg-white p-6 rounded-lg shadow-md w-96">
-        <h2 className="text-2xl font-bold mb-4 text-center">
-          Profile Information
-        </h2>
-        <div className="space-y-4 text-[12px]">
-          <div>
-            <label className="block text-gray-600">Name:</label>
-            {isEditing ? (
-              <input
-                type="text"
-                name="name"
-                value={profile.name}
-                onChange={handleChange}
-                className="w-full border p-2 rounded"
-              />
-            ) : (
-              <p className="text-gray-800">{profile.name}</p>
-            )}
-          </div>
-          <div>
-            <label className="block text-gray-600">Email:</label>
-            {isEditing ? (
-              <input
-                type="email"
-                name="email"
-                value={profile.email}
-                onChange={handleChange}
-                className="w-full border p-2 rounded"
-              />
-            ) : (
-              <p className="text-gray-800">{profile.email}</p>
-            )}
-          </div>
-          <div>
-            <label className="block text-gray-600">Country:</label>
-            {isEditing ? (
-              <input
-                type="text"
-                name="country"
-                value={profile.country}
-                onChange={handleChange}
-                className="w-full border p-2 rounded"
-              />
-            ) : (
-              <p className="text-gray-800">{profile.country}</p>
-            )}
-          </div>
-          <div>
-            <label className="block text-gray-600">Address:</label>
-            {isEditing ? (
-              <textarea
-                name="address"
-                value={profile.address}
-                onChange={handleChange}
-                className="w-full border p-2 rounded"
-              />
-            ) : (
-              <p className="text-gray-800">{profile.address}</p>
-            )}
-          </div>
-          <div>
-            <label className="block text-gray-600">Date of Birth:</label>
-            {isEditing ? (
-              <input
-                type="text"
-                name="dob"
-                value={profile.dob}
-                onChange={handleChange}
-                className="w-full border p-2 rounded"
-              />
-            ) : (
-              <p className="text-gray-800">
-                {profile.dob ? format(new Date(profile.dob), "dd-MM-yyyy") : ""}
-              </p>
-            )}
-          </div>
-          <div>
-            <label className="block text-gray-600">Phone:</label>
-            {isEditing ? (
-              <input
-                type="text"
-                name="phone"
-                value={profile.phone}
-                onChange={handleChange}
-                className="w-full border p-2 rounded"
-              />
-            ) : (
-              <p className="text-gray-800">{profile.phone}</p>
-            )}
-          </div>
-          <div className="flex justify-between mt-4">
-            {isEditing ? (
-              <button
+    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <Card className="w-full max-w-lg shadow-lg border border-gray-200">
+        <CardHeader className="text-center bg-[#d7c378] text-[#0f172a] rounded-t-md py-4">
+          <CardTitle className="text-2xl">Athlete Profile</CardTitle>
+          <CardDescription className="text-[12px] mt-1 text-[#0f172ac2]">
+            Manage your personal information
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-6 space-y-4">
+          {[
+            { label: "Name", name: "name", value: profile.name },
+            { label: "Email", name: "email", value: profile.email },
+            { label: "Country", name: "country", value: profile.country },
+            {
+              label: "Address",
+              name: "address",
+              value: profile.address,
+              isTextArea: true,
+            },
+            { label: "Date of Birth", name: "dob", value: profile.dob },
+            { label: "Phone", name: "phone", value: profile.phone },
+          ].map(({ label, name, value, isTextArea }) => (
+            <div key={name}>
+              <label className="block text-gray-600 font-medium">
+                {label}:
+              </label>
+              {isEditing ? (
+                isTextArea ? (
+                  <Textarea
+                    name={name}
+                    value={value}
+                    onChange={handleChange}
+                    placeholder={`Enter your ${label.toLowerCase()}`}
+                  />
+                ) : (
+                  <Input
+                    name={name}
+                    type={name === "email" ? "email" : "text"}
+                    value={value}
+                    onChange={handleChange}
+                    placeholder={`Enter your ${label.toLowerCase()}`}
+                  />
+                )
+              ) : (
+                <p className="text-gray-800 bg-gray-100 p-2 rounded">
+                  {value || "N/A"}
+                </p>
+              )}
+            </div>
+          ))}
+        </CardContent>
+        <CardFooter className="flex justify-between bg-gray-100 py-4 px-6 rounded-b-md">
+          {isEditing ? (
+            <>
+              <Button
+                variant="success"
                 onClick={handleUpdate}
-                className="bg-green-500 text-white px-4 py-2 rounded-md"
+                className="bg-green-500 hover:bg-green-600"
               >
                 Save
-              </button>
-            ) : (
-              <button
-                onClick={() => setIsEditing(true)}
-                className="bg-blue-500 text-white px-4 py-2 rounded-md"
-              >
-                Edit
-              </button>
-            )}
-            {isEditing && (
-              <button
+              </Button>
+              <Button
+                variant="outline"
                 onClick={() => setIsEditing(false)}
-                className="bg-gray-400 text-white px-4 py-2 rounded-md"
+                className="text-gray-700 border-gray-300"
               >
                 Cancel
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
+              </Button>
+            </>
+          ) : (
+            <Button
+              variant="primary"
+              onClick={() => setIsEditing(true)}
+              className="bg-[#0f172a] hover:bg-[#21325b] text-white"
+            >
+              Edit
+            </Button>
+          )}
+        </CardFooter>
+      </Card>
     </div>
   );
 };

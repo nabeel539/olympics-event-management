@@ -4,53 +4,34 @@ import axios from "axios";
 import { StoreContext } from "../context/StoreContext";
 import { assets } from "../assets/assets";
 import { toast } from "react-toastify";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
-// Dialog Component for showing event details
-const EventDetailDialog = ({ event, isOpen, onClose }) => {
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md text-xs">
-        <img src={assets.banner} alt="banner" className="w-full rounded-lg" />
-        <h2 className="text-2xl font-bold mb-4 mt-2">{event.name}</h2>
-        <p>
-          <strong>Date:</strong> {new Date(event.date).toDateString()}
-        </p>
-        <p>
-          <strong>Venue:</strong> {event.venue}
-        </p>
-        <p>
-          <strong>Participants:</strong> {event.participants.length || "N/A"}
-        </p>
-        <p>
-          <strong>Results:</strong> {event.results.length || "N/A"}
-        </p>
-
-        <button
-          onClick={onClose}
-          className="mt-4 bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600 text-xs"
-        >
-          Close
-        </button>
-      </div>
-    </div>
-  );
-};
-
-const UpcomingEventAthelete = () => {
+const UpcomingEventAthlete = () => {
   const { backendUrl, token } = useContext(StoreContext);
   const [events, setEvents] = useState([]);
+  const [filteredEvents, setFilteredEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const eventsPerPage = 4;
 
   const fetchEvents = async () => {
     try {
-      const response = await axios.get(`${backendUrl}/api/events`); // API URL
+      const response = await axios.get(`${backendUrl}/api/events`);
       if (response.data.success) {
         setEvents(response.data.events);
+        setFilteredEvents(response.data.events); // Initialize filtered events
       } else {
         throw new Error("Failed to fetch events");
       }
@@ -60,9 +41,18 @@ const UpcomingEventAthelete = () => {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     fetchEvents();
   }, []);
+
+  useEffect(() => {
+    const filtered = events.filter((event) =>
+      event.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    setFilteredEvents(filtered);
+    setCurrentPage(1); // Reset to the first page when search query changes
+  }, [searchQuery, events]);
 
   const handleViewDetails = (event) => {
     setSelectedEvent(event);
@@ -73,26 +63,17 @@ const UpcomingEventAthelete = () => {
     setIsDialogOpen(false);
   };
 
-  if (loading) {
-    return <div>Loading events...</div>;
-  }
-
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
-
-  // Function to handle registration for an event
   const handleRegisterForEvent = async (eventId) => {
     const confirm = window.confirm("Do you want to register for this event?");
     if (!confirm) return;
 
     try {
       const response = await axios.post(
-        `${backendUrl}/api/events/register`, // Replace with your actual endpoint
+        `${backendUrl}/api/events/register`,
         { eventId },
         {
           headers: {
-            token: token, // Assuming JWT is stored in local storage
+            token: token,
           },
         }
       );
@@ -106,50 +87,140 @@ const UpcomingEventAthelete = () => {
     } catch (error) {
       console.error("Registration error:", error);
       toast.error("Already registered for this event");
-      //   alert(error.message);
     }
   };
 
-  return (
-    <div className="flex flex-wrap gap-4 justify-center p-4">
-      {events.map((event) => (
-        <div
-          key={event._id}
-          className="w-80 p-4 bg-white shadow-md rounded-lg text-xs"
-        >
-          <img src={assets.slide6} alt="banner" className="rounded-md" />
-          <h2 className="text-xl font-semibold">{event.name}</h2>
-          <p className="text-gray-500">
-            Date: {new Date(event.date).toDateString()}
-          </p>
-          <p className="text-gray-500">Venue: {event.venue}</p>
-          <div className="flex gap-2">
-            <button
-              onClick={() => handleViewDetails(event)}
-              className="flex-grow-[3] mt-2 w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600"
-            >
-              View Details
-            </button>
-            <button
-              onClick={() => handleRegisterForEvent(event._id)}
-              className="flex-grow mt-2 w-full bg-green-700 text-white py-2  rounded-md hover:bg-green-800 flex items-center justify-center"
-            >
-              Register +
-            </button>
-          </div>
-        </div>
-      ))}
+  // Pagination logic
+  const indexOfLastEvent = currentPage * eventsPerPage;
+  const indexOfFirstEvent = indexOfLastEvent - eventsPerPage;
+  const currentEvents = filteredEvents.slice(
+    indexOfFirstEvent,
+    indexOfLastEvent
+  );
 
-      {/* Dialog Component to show event details */}
-      {selectedEvent && (
-        <EventDetailDialog
-          event={selectedEvent}
-          isOpen={isDialogOpen}
-          onClose={handleCloseDialog}
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  if (loading) {
+    return <div className="text-center p-4">Loading events...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center text-red-500 p-4">Error: {error}</div>;
+  }
+
+  return (
+    <div className="flex flex-col gap-6 justify-center p-6 bg-gray-50 min-h-screen">
+      <h2 className="text-3xl font-bold text-center mb-6 text-[#d7c378]">
+        Upcoming Events
+      </h2>
+
+      {/* Search Bar */}
+      <div className="mb-4 flex justify-center">
+        <input
+          type="text"
+          placeholder="Search Events..."
+          className="p-2 w-1/2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#d7c378]"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
         />
+      </div>
+
+      {/* Events List */}
+      <div className="flex flex-wrap gap-6 justify-center">
+        {currentEvents.map((event) => (
+          <div
+            key={event._id}
+            className="w-80 p-4 bg-white shadow-lg rounded-lg text-sm"
+          >
+            <img
+              src={assets.slide6}
+              alt="Event Banner"
+              className="rounded-lg mb-4"
+            />
+            <h2 className="text-lg font-semibold mb-2">{event.name}</h2>
+            <p className="text-gray-500 mb-1">
+              <strong>Date:</strong> {new Date(event.date).toDateString()}
+            </p>
+            <p className="text-gray-500 mb-3">
+              <strong>Venue:</strong> {event.venue}
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-grow"
+                onClick={() => handleViewDetails(event)}
+              >
+                View Details
+              </Button>
+              <Button
+                variant="default"
+                className="flex-grow"
+                onClick={() => handleRegisterForEvent(event._id)}
+              >
+                Register +
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Pagination */}
+      <div className="flex justify-center gap-4 mt-6">
+        {Array.from({
+          length: Math.ceil(filteredEvents.length / eventsPerPage),
+        }).map((_, index) => (
+          <Button
+            key={index}
+            variant="outline"
+            onClick={() => paginate(index + 1)}
+            className={`w-10 h-10 ${
+              currentPage === index + 1 ? "bg-[#0f172a] text-white" : "bg-white"
+            }`}
+          >
+            {index + 1}
+          </Button>
+        ))}
+      </div>
+
+      {/* Dialog for event details */}
+      {selectedEvent && (
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>{selectedEvent.name}</DialogTitle>
+              <DialogDescription>
+                <img
+                  src={assets.banner}
+                  alt="Event Banner"
+                  className="w-full rounded-lg mb-4"
+                />
+                <p>
+                  <strong>Date:</strong>{" "}
+                  {new Date(selectedEvent.date).toDateString()}
+                </p>
+                <p>
+                  <strong>Venue:</strong> {selectedEvent.venue}
+                </p>
+                <p>
+                  <strong>Participants:</strong>{" "}
+                  {selectedEvent.participants.length || "N/A"}
+                </p>
+                <p>
+                  <strong>Results:</strong>{" "}
+                  {selectedEvent.results.length || "N/A"}
+                </p>
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button onClick={handleCloseDialog} variant="secondary">
+                Close
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );
 };
 
-export default UpcomingEventAthelete;
+export default UpcomingEventAthlete;

@@ -41,7 +41,7 @@ const AthleteAuthForm = () => {
           localStorage.setItem("isAdmin", false);
 
           toast.success("Login Successful");
-          navigate("/athelete-dashboard");
+          navigate("/events");
         } else {
           throw new Error(response.data.message);
         }
@@ -59,7 +59,7 @@ const AthleteAuthForm = () => {
           localStorage.setItem("token", response.data.token);
 
           toast.success("Register Successful");
-          navigate("/athelete-dashboard");
+          navigate("/events");
         } else {
           throw new Error(response.data.message);
         }
